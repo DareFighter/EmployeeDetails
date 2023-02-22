@@ -1,15 +1,25 @@
 const express = require("express");
 const EmployeeDetails = require("./models/EmployeeDetails");
+const SignUp = require("./models/SignUp");
 const app = express();
 const mongoose = require("mongoose");
 const cors = require("cors");
+const validator = require("validator");
 require("dotenv").config();
 
 app.use(cors());
 app.options("*", cors());
 app.use(express.json());
 
-app.get("/", async (req, res) => {
+const employeeDbConfig = require("./employeeDbConfig");
+const signUpDbConfig = require("./signUpDbConfig");
+
+app.get("/getEmployeeDetails", async (req, res) => {
+  mongoose.connect(employeeDbConfig.connectionString, {
+    useNewUrlParser: employeeDbConfig.useNewUrlParser,
+    useUnifiedTopology: employeeDbConfig.useUnifiedTopology,
+    dbName: employeeDbConfig.databaseName,
+  });
   const employeeDetails = await EmployeeDetails.find();
 
   if (!employeeDetails) {
@@ -20,15 +30,159 @@ app.get("/", async (req, res) => {
   res.send(employeeDetails);
 });
 
+app.get("/getSignUpDetails", async (req, res) => {
+  mongoose.connect(signUpDbConfig.connectionString, {
+    useNewUrlParser: signUpDbConfig.useNewUrlParser,
+    useUnifiedTopology: signUpDbConfig.useUnifiedTopology,
+    dbName: signUpDbConfig.databaseName,
+  });
+
+  const SignUpDetails = await SignUp.find();
+
+  if (!SignUpDetails) {
+    res.status(500).json({
+      success: false,
+    });
+  }
+
+  res.send(SignUpDetails);
+});
+
+app.post("/postSignUpDetails", async (req, res) => {
+  mongoose.connect(signUpDbConfig.connectionString, {
+    useNewUrlParser: signUpDbConfig.useNewUrlParser,
+    useUnifiedTopology: signUpDbConfig.useUnifiedTopology,
+    dbName: signUpDbConfig.databaseName,
+  });
+
+  const { username, password } = req.body;
+
+  if (!username) {
+    return res.status(400).json({
+      success: false,
+      error: "username field is required",
+    });
+  }
+
+  if (!password) {
+    return res.status(400).json({
+      success: false,
+      error: "password field is required",
+    });
+  }
+
+  const SignUpDetails = new SignUp({
+    username,
+    password,
+  });
+
+  try {
+    const createdSignUp = await SignUpDetails.save();
+    res.status(201).json(createdSignUp);
+  } catch (err) {
+    res.status(500).json({
+      error: err.message,
+      success: false,
+    });
+  }
+});
+
 app.post("/postEmployeeDetails", (req, res) => {
+  mongoose.connect(employeeDbConfig.connectionString, {
+    useNewUrlParser: employeeDbConfig.useNewUrlParser,
+    useUnifiedTopology: employeeDbConfig.useUnifiedTopology,
+    dbName: employeeDbConfig.databaseName,
+  });
+
+  const { name, Email, MobileNo, Designation, Gender, Course, Img } = req.body;
+
+  // Validate name
+  if (!name) {
+    return res.status(400).json({
+      success: false,
+      error: "Name is required",
+    });
+  }
+
+  // Validate email
+  if (!Email) {
+    return res.status(400).json({
+      success: false,
+      error: "Email is required",
+    });
+  } else if (!validator.isEmail(Email)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid email",
+    });
+  }
+
+  // Validate mobile number
+  if (!MobileNo) {
+    return res.status(400).json({
+      success: false,
+      error: "Mobile number is required",
+    });
+  } else if (!validator.isMobilePhone(MobileNo, "en-IN")) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid mobile number",
+    });
+  }
+
+  // Validate designation
+  if (!Designation) {
+    return res.status(400).json({
+      success: false,
+      error: "Designation is required",
+    });
+  }
+
+  // Validate gender
+  if (!Gender) {
+    return res.status(400).json({
+      success: false,
+      error: "Gender is required",
+    });
+  } else if (!["Male", "Female", "Other"].includes(Gender)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid gender",
+    });
+  }
+
+  // Validate course
+  if (!Course) {
+    return res.status(400).json({
+      success: false,
+      error: "Course is required",
+    });
+  }
+
+  // Validate Img
+  if (!Img) {
+    return res.status(400).json({
+      success: false,
+      error: "Image is required",
+    });
+  } else if (
+    !validator.isURL(Img) ||
+    !(Img.endsWith(".jpg") || Img.endsWith(".png"))
+  ) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid image URL. Only JPG and PNG images are allowed.",
+    });
+  }
+
   const employeeDetails = new EmployeeDetails({
-    name: req.body.name,
-    Email: req.body.Email,
-    MobileNo: req.body.MobileNo,
-    Designation: req.body.Designation,
-    Gender: req.body.Gender,
-    Course: req.body.Course,
-    Img: req.body.Img,
+    name,
+    Email,
+    MobileNo,
+    Designation,
+    Gender,
+    Course,
+    Img,
   });
 
   employeeDetails

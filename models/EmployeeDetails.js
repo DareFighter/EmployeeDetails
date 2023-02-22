@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
 
 const employeeDetailsSchema = mongoose.Schema({
   name: {
@@ -10,7 +11,7 @@ const employeeDetailsSchema = mongoose.Schema({
     required: true,
   },
   MobileNo: {
-    type: Number,
+    type: String,
     required: true,
   },
   Designation: {
@@ -28,6 +29,13 @@ const employeeDetailsSchema = mongoose.Schema({
   Img: {
     type: String,
     required: true,
+    validate: {
+      validator: function (value) {
+        const extension = value.split(".").pop().toLowerCase();
+        return extension === "jpg" || extension === "png";
+      },
+      message: "Invalid file type",
+    },
   },
 });
 
