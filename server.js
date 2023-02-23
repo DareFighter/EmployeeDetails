@@ -198,6 +198,175 @@ app.post("/postEmployeeDetails", (req, res) => {
     });
 });
 
+app.put("/updateEmployeeDetails/:id", (req, res) => {
+  mongoose.connect(employeeDbConfig.connectionString, {
+    useNewUrlParser: employeeDbConfig.useNewUrlParser,
+    useUnifiedTopology: employeeDbConfig.useUnifiedTopology,
+    dbName: employeeDbConfig.databaseName,
+  });
+
+  const { name, Email, MobileNo, Designation, Gender, Course, Img } = req.body;
+
+  // Validate email
+  if (Email && !validator.isEmail(Email)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid email",
+    });
+  }
+
+  // Validate mobile number
+  if (MobileNo && !validator.isMobilePhone(MobileNo, "en-IN")) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid mobile number",
+    });
+  }
+
+  // Validate gender
+  if (Gender && !["Male", "Female", "Other"].includes(Gender)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid gender",
+    });
+  }
+
+  // Validate Img
+  if (
+    Img &&
+    (!validator.isURL(Img) || !(Img.endsWith(".jpg") || Img.endsWith(".png")))
+  ) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid image URL. Only JPG and PNG images are allowed.",
+    });
+  }
+
+  EmployeeDetails.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: {
+        name: name || undefined,
+        Email: Email || undefined,
+        MobileNo: MobileNo || undefined,
+        Designation: Designation || undefined,
+        Gender: Gender || undefined,
+        Course: Course || undefined,
+        Img: Img || undefined,
+      },
+    },
+    { new: true }
+  )
+    .then((updatedEmployeeDetails) => {
+      res.json(updatedEmployeeDetails);
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+        success: false,
+      });
+    });
+});
+app.put("/updateEmployeeDetails/:id", (req, res) => {
+  mongoose.connect(employeeDbConfig.connectionString, {
+    useNewUrlParser: employeeDbConfig.useNewUrlParser,
+    useUnifiedTopology: employeeDbConfig.useUnifiedTopology,
+    dbName: employeeDbConfig.databaseName,
+  });
+
+  const { name, Email, MobileNo, Designation, Gender, Course, Img } = req.body;
+
+  // Validate email
+  if (Email && !validator.isEmail(Email)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid email",
+    });
+  }
+
+  // Validate mobile number
+  if (MobileNo && !validator.isMobilePhone(MobileNo, "en-IN")) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid mobile number",
+    });
+  }
+
+  // Validate gender
+  if (Gender && !["Male", "Female", "Other"].includes(Gender)) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid gender",
+    });
+  }
+
+  // Validate Img
+  if (
+    Img &&
+    (!validator.isURL(Img) || !(Img.endsWith(".jpg") || Img.endsWith(".png")))
+  ) {
+    return res.status(400).json({
+      success: false,
+      error: "Invalid image URL. Only JPG and PNG images are allowed.",
+    });
+  }
+
+  EmployeeDetails.findByIdAndUpdate(
+    req.params.id,
+    {
+      $set: {
+        name: name || undefined,
+        Email: Email || undefined,
+        MobileNo: MobileNo || undefined,
+        Designation: Designation || undefined,
+        Gender: Gender || undefined,
+        Course: Course || undefined,
+        Img: Img || undefined,
+      },
+    },
+    { new: true }
+  )
+    .then((updatedEmployeeDetails) => {
+      res.json(updatedEmployeeDetails);
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+        success: false,
+      });
+    });
+});
+
+app.delete("/deleteEmployeeDetails/:id", (req, res) => {
+  mongoose.connect(employeeDbConfig.connectionString, {
+    useNewUrlParser: employeeDbConfig.useNewUrlParser,
+    useUnifiedTopology: employeeDbConfig.useUnifiedTopology,
+    dbName: employeeDbConfig.databaseName,
+  });
+
+  const id = req.params.id;
+
+  EmployeeDetails.findByIdAndDelete(id)
+    .then((deletedEmployeeDetails) => {
+      if (!deletedEmployeeDetails) {
+        return res.status(404).json({
+          success: false,
+          error: "Employee details not found",
+        });
+      }
+      res.status(200).json({
+        success: true,
+        message: "Employee details deleted successfully",
+      });
+    })
+    .catch((err) => {
+      res.status(500).json({
+        error: err,
+        success: false,
+      });
+    });
+});
+
 mongoose.set("strictQuery", true);
 mongoose
   .connect(
